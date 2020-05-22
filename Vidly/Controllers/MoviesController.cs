@@ -20,13 +20,77 @@ namespace Vidly.Controllers
         {
             _context.Dispose();
         }
+
         //Returning movies on index page
         public ViewResult Index()
         {
+            //For manually returning movies
             //var movies = GetMovies();
             var movies = _context.Movies.Include(m => m.Genre).ToList();
             return View(movies);
         }
+
+
+        public ViewResult New()
+        {
+            var genreTypes = _context.GenreTypes.ToList();
+            var viewModel = new MovieFormViewModel
+            {
+                GenreTypes = genreTypes
+            };
+            return View("MovieForm",viewModel);
+        }
+
+        public ActionResult Edit(int id)
+        {
+            var movie = _context.Movies.SingleOrDefault(m => m.Id == id);
+            if (movie == null)
+                return HttpNotFound();
+
+            var viewModel = new MovieFormViewModel
+            {
+                Movie = movie,
+                GenreTypes = _context.GenreTypes.ToList()
+            };
+            return View("MovieForm", viewModel);
+        }
+
+        //returning details page on movie link
+        public ActionResult Details(int id)
+        {
+            var movie = _context.Movies.Include(m => m.Genre).SingleOrDefault(m => m.Id == id);
+
+            if (movie == null)
+                return HttpNotFound();
+
+            return View(movie);
+        }
+
+        [HttpPost]
+        public ActionResult Save(Movie movie)
+        {
+            if (movie.Id == 0)
+            {
+                movie.DateAdded = DateTime.Now;
+                _context.Movies.Add(movie);
+            }
+            else
+            {
+                var moviesInDb = _context.Movies.Single(m => m.Id == movie.Id);
+                moviesInDb.Name = movie.Name;
+                moviesInDb.ReleaseDate = movie.ReleaseDate;
+                moviesInDb.GenreId = movie.GenreId;
+                moviesInDb.NumberInStock = movie.NumberInStock;
+
+            }
+            _context.SaveChanges();
+            return RedirectToAction("Index", "Movies");
+        }
+
+
+
+
+
         //For demonstration purposes
         //private IEnumerable<Movie> GetMovies()
         //{
@@ -56,16 +120,7 @@ namespace Vidly.Controllers
             return View(viewModel);
         }
 
-        //returning details page on movie link
-        public ActionResult Details(int id)
-        {
-            var movie = _context.Movies.Include(m => m.Genre).SingleOrDefault(m => m.Id == id);
 
-            if (movie == null)
-                return HttpNotFound();
-
-            return View(movie);
-        }
     }
 
 }
