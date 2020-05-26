@@ -24,13 +24,16 @@ namespace Vidly.Controllers
         //Returning movies on index page
         public ViewResult Index()
         {
+            if (User.IsInRole(RoleName.CanManageMovies))
             //For manually returning movies
             //var movies = GetMovies();
-            var movies = _context.Movies.Include(m => m.Genre).ToList();
-            return View(movies);
+            //var movies = _context.Movies.Include(m => m.Genre).ToList();
+            //return View(movies);
+            return View("List");
+            return View("ReadOnlyList");
         }
 
-
+        [Authorize(Roles =RoleName.CanManageMovies)]
         public ViewResult New()
         {
             var genreTypes = _context.GenreTypes.ToList();
